@@ -3826,7 +3826,7 @@ static int __mdss_fb_display_thread(void *data)
 				mfd->index);
 
 	while (1) {
-		wait_event_interruptible(mfd->commit_wait_q,
+		wait_event(mfd->commit_wait_q,
 				(atomic_read(&mfd->commits_pending) ||
 				 kthread_should_stop()));
 
@@ -4666,12 +4666,10 @@ static int __mdss_fb_copy_destscaler_data(struct fb_info *info,
 static int mdss_fb_atomic_commit_ioctl(struct fb_info *info,
 	unsigned long *argp, struct file *file)
 {
-	static struct mdp_input_layer layer_list[MAX_LAYER_COUNT]
-		____cacheline_aligned_in_smp;
 	int ret, i = 0, j = 0, rc;
 	struct mdp_layer_commit  commit;
 	u32 buffer_size, layer_count;
-	struct mdp_input_layer *layer;
+	struct mdp_input_layer *layer, layer_list[MAX_LAYER_COUNT];
 	struct mdp_input_layer __user *input_layer_list;
 	struct mdp_output_layer output_layer;
 	struct mdp_output_layer __user *output_layer_user;

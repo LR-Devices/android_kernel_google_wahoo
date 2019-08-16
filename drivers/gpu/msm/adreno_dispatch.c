@@ -987,16 +987,7 @@ static void _adreno_dispatcher_issuecmds(struct adreno_device *adreno_dev)
  */
 static void adreno_dispatcher_issuecmds(struct adreno_device *adreno_dev)
 {
-	struct adreno_dispatcher *dispatcher = &adreno_dev->dispatcher;
-
-	/* If the dispatcher is busy then schedule the work for later */
-	if (!mutex_trylock(&dispatcher->mutex)) {
-		adreno_dispatcher_schedule(KGSL_DEVICE(adreno_dev));
-		return;
-	}
-
-	_adreno_dispatcher_issuecmds(adreno_dev);
-	mutex_unlock(&dispatcher->mutex);
+	adreno_dispatcher_schedule(KGSL_DEVICE(adreno_dev));
 }
 
 /**
@@ -2805,9 +2796,8 @@ int adreno_dispatcher_init(struct adreno_device *adreno_dev)
 
 	init_waitqueue_head(&dispatcher->cmd_waitq);
 	dispatcher->state = (atomic_t)ATOMIC_INIT(THREAD_IDLE);
-	dispatcher->thread = kthread_run_perf_critical(adreno_dispatcher_thread,
-						       adreno_dev,
-						       "adreno_dispatch");
+	dispatcher->thread = kthread_run(adreno_dispatcher_thread, adreno_dev,
+					 "adreno_dispatch");
 	if (IS_ERR(dispatcher->thread))
 		return PTR_ERR(dispatcher->thread);
 
